@@ -182,7 +182,7 @@ void web_calculateIndCDF(webGraph *wg, char *filename) {
         CDF[i] = 0;
     for(i=1; i<=wg->vertexNum; i++) {
         CDF[wg->vr[i].numInLink]++;
-        maxIn = maxIn < CDF[wg->vr[i].numInLink] ?CDF[wg->vr[i].numInLink]:maxIn;
+        if(maxIn < wg->vr[i].numInLink)maxIn = wg->vr[i].numInLink;
     }
     int last = 0;
     for(i=0; i<= maxIn; i++) {
@@ -191,10 +191,11 @@ void web_calculateIndCDF(webGraph *wg, char *filename) {
             fprintf(find,"%d\t\t%lf\n", i, 1.0*last / wg->vertexNum);
         }
     }
+    //fprintf(find, "ALL:%d NUM:%d", last, wg->vertexNum);
     fclose(find);
     free(CDF);
     CDF = NULL;
-    printf("Calculate CDF success\n");
+    printf("@@@@@ Calculate CDF success  @@@@@\n");
 }
 
 
@@ -224,7 +225,7 @@ void web_generateMap(webGraph *wg, char *filename) {
     }
     fprintf(fmap,"}");
     fclose(fmap);
-    printf("Generate Map success\n");
+    printf("@@@@@ Generate Map success  @@@@@\n");
 }
 
 
@@ -322,7 +323,7 @@ void web_printAllPagerank(webGraph *wg, char *filename) {
     for(i=1; i<=wg->vertexNum; i++)
         fprintf(fpra,"%s\t%lf\n",wg->vr[i].url, wg->vr[i].pagerank);
     fclose(fpra);
-    printf("print all pageranke success\n");
+    printf("@@@@@ print all pageranke success  @@@@@\n");
 }
 
 void insertSort(prTop10 *prt, vertexRow curNode, int up) {
@@ -357,7 +358,7 @@ void web_printTop10Pagerank(webGraph *wg, char *filename) {
         fprintf(fprt,"%s\t%lf\n",wg->prt[i].url, wg->prt[i].pagerank);
 
     fclose(fprt);
-    printf("print top10 pagerank success\n");
+    printf("@@@@@ print top10 pagerank success  @@@@@\n");
 }
 
 char *web_getDir(char *site, char dir[]) {
@@ -397,7 +398,7 @@ void web_checkUrlPagerank(webGraph *wg, char *infile, char *outfile) {
         curNode = wg->vd[hres].vn;
         while(curNode) {
             if(curNode->num>0 && strcmp(curNode->url,dir) == 0) {
-                fprintf(fout,"%s\t%d\t%lf\n", dir, wg->vr[curNode->num].numInLink, wg->vr[curNode->num].pagerank);
+                fprintf(fout,"%s\t%d\t%lf\n", curUrl, wg->vr[curNode->num].numInLink, wg->vr[curNode->num].pagerank);
                 flag = 1;
                 break;
             }
@@ -407,7 +408,7 @@ void web_checkUrlPagerank(webGraph *wg, char *infile, char *outfile) {
     }
     fclose(fin);
     fclose(fout);
-    printf("check url success\n");
+    printf("@@@@@ check url success  @@@@@\n");
 }
 
 

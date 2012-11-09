@@ -41,7 +41,7 @@ int startCrawler(char *wsite, char *dir, int numOfThread) {
 		st1 = qurls->curNum;
 		st2 = pool->cur_running;
 		pthread_mutex_unlock(&(pool->queue_lock));
-		printf("\nIn Main\n");
+		printf("\n@@@@@ In Main  @@@@@\n\n");
         if(st1==0 && st2 == 0)break;
         sleep(1);
     }

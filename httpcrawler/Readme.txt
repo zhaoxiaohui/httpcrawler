@@ -1,4 +1,4 @@
-输入 如： ./siteanalysize http://xxx.xxx.xxx.xxx/techqq/index.html check.dat [80]
+输入 如： ./siteanalyzer http://xxx.xxx.xxx.xxx/techqq/index.html check.dat [80]
 
 方括号中的内容可选 即设定端口号
 如果默认没有给出则系统按照8080来开启链接
