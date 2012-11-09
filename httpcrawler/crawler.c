@@ -159,7 +159,7 @@ void * crawling (void *site, void *dir) {
         res = http_response_status(body);
         if(res/100 != 2) {
             flag = -1;
-            count++;
+           count++;
             closeSocket(sock);
             continue;
         } else if(res/100 == 2) {

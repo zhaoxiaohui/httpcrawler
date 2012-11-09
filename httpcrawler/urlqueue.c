@@ -8,7 +8,7 @@
 urlq_t * queue_init(urlq_t *q) {
     q->head = 0;
     q->tail = 0;
-    q->size = 100000;/*暂时一个循环存放1000个URL*/
+    q->size = 300000;/*暂时一个循环存放1000个URL*/
     q->curNum = 0;
     q->data = (char **)malloc(sizeof(char *) * (q->size));
     int i;

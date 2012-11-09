@@ -8,12 +8,6 @@
 extern int haveCalInOut;
 extern int haveCalPr;
 
-typedef struct PR_TOP10 {
-    char url[256];
-    float pagerank;
-    int numInLink;
-} prTop10;
-
 void web_init(webGraph * wg) {
     wg->vertexNum = 0;
     wg->vr = (vertexRow *)malloc(sizeof(vertexRow) * NODENUM);
@@ -24,13 +18,22 @@ void web_init(webGraph * wg) {
     wg->vd = (vertexDict *)malloc(sizeof(vertexDict) * URLHASH);
     if(wg->vd == NULL) {
         fprintf(stderr,"initialize web error.malloc dict\n");
+        exit(0);
     }
-
+    
     int i;
     for(i=0; i<URLHASH; i++) {
         wg->vd[i].vn = NULL;
     }
     //fprintf(stderr,"initialize web success\n");
+    wg->prt = (prTop10 *)malloc(sizeof(prTop10) * 10);
+    if(wg->prt == NULL){
+        fprintf(stderr,"initialize web error.malloc prt\n");
+        exit(0);
+    }
+    for(i=0; i<10; i++){
+        wg->prt[i].pagerank = 0.0;
+    }
 }
 
 void web_insertVertex(char *url, webGraph *wg) {
@@ -164,8 +167,8 @@ void web_calculateIndCDF(webGraph *wg, char *filename) {
         web_calculateInAndOut(wg);
         haveCalInOut = 1;
     }
-    FILE *fres = fopen(filename,"w");
-    if(fres == NULL) {
+    FILE *find = fopen(filename,"w");
+    if(find == NULL) {
         fprintf(stderr,"failed to open file %s\n",filename);
         return;
     }
@@ -175,8 +178,8 @@ void web_calculateIndCDF(webGraph *wg, char *filename) {
         return;
     }
     int i, maxIn = 0;
-    for(i=1; i<=wg->vertexNum; i++)
-        CDF[wg->vr[i].numInLink] = 0;
+    for(i=0; i<=wg->vertexNum; i++)
+        CDF[i] = 0;
     for(i=1; i<=wg->vertexNum; i++) {
         CDF[wg->vr[i].numInLink]++;
         maxIn = maxIn < CDF[wg->vr[i].numInLink] ?CDF[wg->vr[i].numInLink]:maxIn;
@@ -185,27 +188,28 @@ void web_calculateIndCDF(webGraph *wg, char *filename) {
     for(i=0; i<= maxIn; i++) {
         if(CDF[i] > 0) {
             last += CDF[i];
-            fprintf(fres,"%d\t\t%lf\n", i, 1.0*last / wg->vertexNum);
+            fprintf(find,"%d\t\t%lf\n", i, 1.0*last / wg->vertexNum);
         }
     }
-    fclose(fres);
+    fclose(find);
     free(CDF);
-    fprintf(stderr,"Calculate CDF success\n");
+    CDF = NULL;
+    printf("Calculate CDF success\n");
 }
 
 
 void web_generateMap(webGraph *wg, char *filename) {
-    FILE *fres = fopen(filename,"w");
-    if(fres == NULL) {
+    FILE *fmap = fopen(filename,"w");
+    if(fmap == NULL) {
         fprintf(stderr,"failed to open file %s\n",filename);
         return;
     }
-    fprintf(fres,"digraph URL_MAP{\n");
+    fprintf(fmap,"digraph URL_MAP{\n");
     int i, state;
 
     for(i=1; i<=wg->vertexNum; i++)
-        fprintf(fres,"%d[label = \"%s\"];\n",wg->vr[i].num,wg->vr[i].url);
-    fprintf(fres,"\n");
+        fprintf(fmap,"%d[label = \"%s\"];\n",wg->vr[i].num,wg->vr[i].url);
+    fprintf(fmap,"\n");
 
     vertexCol *curNode;
     for(i=1; i<=wg->vertexNum; i++) {
@@ -213,14 +217,14 @@ void web_generateMap(webGraph *wg, char *filename) {
         while(curNode) {
             state = curNode->vn->num;
             if(state > 0) {
-                fprintf(fres,"%d -> %d;\n",wg->vr[i].num,state);
+                fprintf(fmap,"%d -> %d;\n",wg->vr[i].num,state);
             }
             curNode = curNode->next;
         }
     }
-    fprintf(fres,"}");
-    fclose(fres);
-    fprintf(stderr,"Generate Map success\n");
+    fprintf(fmap,"}");
+    fclose(fmap);
+    printf("Generate Map success\n");
 }
 
 
@@ -297,7 +301,9 @@ void web_calculatePagerank(webGraph *wg) {
     free(lastMap);
     free(curMap);
     free(tmpMap);
-
+    lastMap = NULL;
+    curMap = NULL;
+    tmpMap = NULL;
 }
 
 
@@ -306,29 +312,31 @@ void web_printAllPagerank(webGraph *wg, char *filename) {
         web_calculatePagerank(wg);
         haveCalPr = 1;
     }
-    FILE *fres = fopen(filename,"w");
-    if(fres == NULL) {
+    FILE *fpra = fopen(filename,"w");
+    if(fpra == NULL) {
         fprintf(stderr,"failed to open file %s\n",filename);
         return;
     }
     int i;
 
     for(i=1; i<=wg->vertexNum; i++)
-        fprintf(fres,"%s\t%lf\n",wg->vr[i].url, wg->vr[i].pagerank);
-    fclose(fres);
-    fprintf(stderr,"print all pageranke success\n");
+        fprintf(fpra,"%s\t%lf\n",wg->vr[i].url, wg->vr[i].pagerank);
+    fclose(fpra);
+    printf("print all pageranke success\n");
 }
 
-void insertSort(prTop10 *prt, vertexRow curNode, int top) {
-    int i = top-1, split;
+void insertSort(prTop10 *prt, vertexRow curNode, int up) {
+    int i = up-1, split;
     while(i>=0 && curNode.pagerank > prt[i].pagerank)i--;
 
-    split = i+1;
-    for(i=top-1; i>split; i--)
-        prt[i] = prt[i-1];
-    strcpy(prt[split].url,curNode.url);
-    prt[split].pagerank = curNode.pagerank;
-    prt[split].numInLink = curNode.numInLink;
+    if(i < up-1){
+        split = i+1;
+        for(i=up-1; i>split; i--)
+            prt[i] = prt[i-1];
+        strcpy(prt[split].url,curNode.url);
+        prt[split].pagerank = curNode.pagerank;
+        prt[split].numInLink = curNode.numInLink;
+    }
 }
 
 void web_printTop10Pagerank(webGraph *wg, char *filename) {
@@ -336,33 +344,20 @@ void web_printTop10Pagerank(webGraph *wg, char *filename) {
         web_calculatePagerank(wg);
         haveCalPr = 1;
     }
-    prTop10 *prt = (prTop10 *)malloc(sizeof(prTop10)*10);
-    if(prt == NULL) {
-        fprintf(stderr,"faile to malloc top10\n");
-        return;
-    }
-
-    int i, top;
-    top = wg->vertexNum>10?10:wg->vertexNum;
-    for(i=0; i<top; i++)
-        prt[i].pagerank = 0.0;
-
-    //insert sort
+    int i, up;
+    up = wg->vertexNum > 10 ? 10:wg->vertexNum;
     for(i=1; i<=wg->vertexNum; i++) {
-        insertSort(prt, wg->vr[i], top);
+        insertSort(wg->prt, wg->vr[i], up);
     }
+    FILE *fprt = fopen(filename, "w");
+    
+    for(i=0; i<up; i++)
+        fprintf(fprt,"%s\t%d\n",wg->prt[i].url, wg->prt[i].numInLink);
+    for(i=0; i<up; i++)
+        fprintf(fprt,"%s\t%lf\n",wg->prt[i].url, wg->prt[i].pagerank);
 
-    FILE *fres = fopen(filename,"w");
-    if(fres == NULL) {
-        fprintf(stderr,"failed to open file %s\n",filename);
-        return;
-    }
-    for(i=0; i<top; i++)
-        fprintf(fres,"%s\t%d\n",prt[i].url,prt[i].numInLink);
-    for(i=0; i<top; i++)
-        fprintf(fres,"%s\t%lf\n",prt[i].url,prt[i].pagerank);
-    fclose(fres);
-    fprintf(stderr,"print top10 pagerank success\n");
+    fclose(fprt);
+    printf("print top10 pagerank success\n");
 }
 
 char *web_getDir(char *site, char dir[]) {
@@ -412,7 +407,7 @@ void web_checkUrlPagerank(webGraph *wg, char *infile, char *outfile) {
     }
     fclose(fin);
     fclose(fout);
-    fprintf(stderr,"check url success\n");
+    printf("check url success\n");
 }
 
 

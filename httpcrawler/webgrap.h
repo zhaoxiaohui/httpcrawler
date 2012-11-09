@@ -21,8 +21,8 @@
 
 #define RANGE 0.0001
 #define DRATION 0.15
-#define URLHASH 150001
-#define NODENUM 200000
+#define URLHASH 400001
+#define NODENUM 400000
 
 typedef struct VertexNode {
     int               num;   //0:undone -1:being worked
@@ -39,6 +39,12 @@ typedef struct VertexDict {
     vertexNode *vn;
 } vertexDict;
 
+typedef struct PR_TOP10 {
+     char url[256];
+     float pagerank;
+     int numInLink;
+ } prTop10;
+
 typedef struct VertexRow {
     int        num;
     char       url[256];
@@ -52,6 +58,7 @@ typedef struct WEB {
     int        vertexNum; //num of nodes
     vertexRow  *vr;
     vertexDict *vd;
+    prTop10 *prt;    
 } webGraph;
 
 void web_init(webGraph * wg);

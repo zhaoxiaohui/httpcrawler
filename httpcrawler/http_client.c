@@ -35,6 +35,7 @@ int http_response_content(int socket, char content[]){
         if(num < 1)
             break;
         total += num;
+        if(total > 500000)return -1;
         temp[num] = '\0';
         strcat(content,temp);
     }
@@ -48,7 +49,7 @@ char *http_response_body(int socket,int len, char body[]) {
         fprintf(stderr,"failed to malloc content int httpresponse\n");
     }
     memset(p,'\0',len);
-    strcat(p,body);
+    strncat(p,body,strlen(body));
     char temp[2000];
     int num;
     while(1) {
@@ -57,7 +58,7 @@ char *http_response_body(int socket,int len, char body[]) {
         if(num < 1)
             break;
         temp[num] = '\0';
-        strcat(p,temp);
+        strncat(p,temp,strlen(temp));
     }
     /*recv(socket,p,20000,0);*/
     return p;

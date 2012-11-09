@@ -1,13 +1,13 @@
 all: siteanalyzer
 
-siteanalyzer: main.o crawler.o webgrap.o urlhash.o urlqueue.o link_parser.o http_client.o network.o
-	cc -g -o siteanalyzer main.o crawler.o webgrap.o urlhash.o urlqueue.o link_parser.o http_client.o network.o -lpthread
+siteanalyzer: main.o crawler_http.o webgrap.o urlhash.o urlqueue.o link_parser.o http_client.o network.o
+	cc -g -o siteanalyzer main.o crawler_http.o webgrap.o urlhash.o urlqueue.o link_parser.o http_client.o network.o -lpthread
 
 main.o: main.c crawler.h webgrap.h
 	cc -g -o main.o -c main.c
 
-crawler.o: crawler.c crawler.h webgrap.h urlqueue.h link_parser.h http_client.h network.h
-	cc -g -o crawler.o -c crawler.c -lpthread
+crawler_http.o: crawler_http.c crawler_http.h webgrap.h urlqueue.h link_parser.h http_client.h network.h
+	cc -g -o crawler_http.o -c crawler_http.c -lpthread
 
 webgrap.o: webgrap.c webgrap.h urlhash.h
 	cc -g -o webgrap.o -c webgrap.c

@@ -13,10 +13,11 @@ int check(char res[][256], int num, char link[]) {
     return 1;
 }
 int extract_link(char *directory, char *htmltxt, char res[][256]) {
-    /*get the real directory*/
+    if(directory==NULL || htmltxt==NULL)return 0;
+	/*get the real directory*/
     int len = strlen(directory)-1, i;
     while(*(directory + len)!='/')len--;
-    char dir[1024];
+    char dir[256];
     for(i=0; i<= len; i++) {
         dir[i] = directory[i];
     }
@@ -31,11 +32,11 @@ int extract_link(char *directory, char *htmltxt, char res[][256]) {
     /*printf("%s\n",p);*/
     while(p != NULL) {
         p += 4;
-        while((*p) != '=') {
+        while(p && (*p) != '=') {
             if((*p) !=' ')break;
             p++;
         }
-        if((*p) == '=') {
+        if(p && (*p) == '=') {
 
             for(i=0; i<= len; i++) {
                 dir[i] = directory[i];
@@ -47,19 +48,23 @@ int extract_link(char *directory, char *htmltxt, char res[][256]) {
                 p++;
             }
             /*printf("%s\n",p);*/
-            p++;
+            if(p)
+                p++;
             while(p && (*p)!='\"' && (*p)!='\'') {
                 /*printf("%c\n",*p);*/
                 link[link_id++] = *p;
+                if(link_id >=255)break;
                 p++;
             }
+            
             link[link_id] = '\0';
+            char *percent = strstr(link,"%");
             //printf("%s\n",link);
             //t = strstr(link,CATEGORY1);
-            int len = strlen(link);
+            int len = link_id;
             int html = link[len-1]=='l' && link[len-2]=='m' && link[len-3]=='t' && link[len-4]=='h';
             int htm = link[len-1]=='m' && link[len-2]=='t' && link[len-3]=='h';
-            if(link[0]!='/' && (html || htm)) {
+            if(!percent && link[0]!='/' && (html || htm)) {
                 t2 = strstr(link,HTTPCATE);
                 if(!t2) { /*is not a outside web*/
                     t3 = strstr(link,POTPOT);
@@ -100,7 +105,8 @@ int extract_link(char *directory, char *htmltxt, char res[][256]) {
 
         //printf("%d\n",num);
         //p = strstr(p,LINKNODEA);
-        p = strstr(p,LINKTOFIND);
+        if(p)
+            p = strstr(p,LINKTOFIND);
         /*printf("%s\n",p);*/
     }
     /*return the number of url found*/

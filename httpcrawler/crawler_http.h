@@ -49,16 +49,29 @@
  */
 typedef struct ThreadPool{
 	pthread_mutex_t queue_lock;
+	pthread_cond_t queue_have;
+
+	/*这个线程池访问的站点*/
+	char *website;
 	/*线程数组*/
 	pthread_t *threads;
 	/*线程个数*/
-	int thread_num;	
-}theadPool;
+	int threadNum;
+	/*正在执行个数*/
+    int cur_running;
+	int *working;
+    /*已经处理的个数*/
+    int worked;
+	/*是否销毁*/
+	int destroy;
+    /*有几个还活着*/
+    int alive;	
+}threadPool;
 
 /*销毁线程池*/
-int poolDestroy();
+int pool_destroy();
 /*初始化线程池*/
-void poolInit(int threadnum);
+void pool_init(int threadnum, char *);
 /*线程执行函数*/
 void *threadCrawling(void *arg);
 
