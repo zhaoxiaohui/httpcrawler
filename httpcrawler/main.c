@@ -113,10 +113,10 @@ int main(int argc, char *argv[]) {
     web_calculateIndCDF(wg, INDCDF);
 
     //gen map
-    web_generateMap(wg,SITEMAP);
+    //web_generateMap(wg,SITEMAP);
 
     //print pr
-    web_printAllPagerank(wg,"allpagerank.dat");
+    //web_printAllPagerank(wg,"allpagerank.dat");
 
     //print top10 pr
     web_printTop10Pagerank(wg, TOP10);
