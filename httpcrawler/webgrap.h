@@ -58,10 +58,11 @@ typedef struct WEB {
     int        vertexNum; //num of nodes
     vertexRow  *vr;
     vertexDict *vd;
-    prTop10 *prt;    
+    prTop10 *prt;
+    char *website;    
 } webGraph;
 
-void web_init(webGraph * wg);
+void web_init(webGraph * wg, char *site);
 void web_insertVertex(char *url, webGraph *wg);
 int  web_getNum(char *url, webGraph *wg);
 int web_setNum(char *url, webGraph *wg, int flag);

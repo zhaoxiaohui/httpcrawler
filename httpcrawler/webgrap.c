@@ -8,7 +8,7 @@
 extern int haveCalInOut;
 extern int haveCalPr;
 
-void web_init(webGraph * wg) {
+void web_init(webGraph *wg, char *site) {
     wg->vertexNum = 0;
     wg->vr = (vertexRow *)malloc(sizeof(vertexRow) * NODENUM);
     if(wg->vr == NULL) {
@@ -20,7 +20,6 @@ void web_init(webGraph * wg) {
         fprintf(stderr,"initialize web error.malloc dict\n");
         exit(0);
     }
-    
     int i;
     for(i=0; i<URLHASH; i++) {
         wg->vd[i].vn = NULL;
@@ -34,6 +33,13 @@ void web_init(webGraph * wg) {
     for(i=0; i<10; i++){
         wg->prt[i].pagerank = 0.0;
     }
+    
+    wg->website = (char *)malloc(sizeof(char) * 256);
+    if(wg->website == NULL){
+        fprintf(stderr,"initialize web error.malloc website\n");
+        exit(0);
+    }
+    strcpy(wg->website, site);
 }
 
 void web_insertVertex(char *url, webGraph *wg) {
@@ -254,7 +260,7 @@ void web_calculatePagerank(webGraph *wg) {
     for(i=1; i<=numVertex; i++)
         lastMap[i] = 1.0;
 
-    float label, sum;
+    float label, sum, father;
     int outLink, flag=0, state;
     vertexCol *curNode;
     while(1) {
@@ -266,15 +272,16 @@ void web_calculatePagerank(webGraph *wg) {
         for(i=1; i <=numVertex; i++) {
             curNode = wg->vr[i].vc;
             outLink = wg->vr[i].numOutLink;
+            father = lastMap[i]/outLink;
             while(curNode != NULL) {
                 state = curNode->vn->num;
-                if(state > 0) {
-                    tmpMap[state] += lastMap[i]/outLink;
+                if(state>0 && state!=i) {
+                    tmpMap[state] += father;
                 }
                 curNode = curNode->next;
             }
         }
-        sum = 0;
+        sum = 0.0;
         for(i=1; i<=numVertex; i++) {
             curMap[i] = ((1.0 - DRATION) * tmpMap[i]) + ((DRATION/numVertex) * label);
             sum += curMap[i];
@@ -319,9 +326,12 @@ void web_printAllPagerank(webGraph *wg, char *filename) {
         return;
     }
     int i;
-
-    for(i=1; i<=wg->vertexNum; i++)
-        fprintf(fpra,"%s\t%lf\n",wg->vr[i].url, wg->vr[i].pagerank);
+    double to = 0.0;
+    for(i=1; i<=wg->vertexNum; i++){
+        fprintf(fpra,"%s%s\t%lf\n",wg->website, wg->vr[i].url, wg->vr[i].pagerank);
+        //to += wg->vr[i].pagerank;
+    }
+    //fprintf(fpra,"total pr:%lf\n",to);
     fclose(fpra);
     printf("@@@@@ print all pageranke success  @@@@@\n");
 }
@@ -353,19 +363,21 @@ void web_printTop10Pagerank(webGraph *wg, char *filename) {
     FILE *fprt = fopen(filename, "w");
     
     for(i=0; i<up; i++)
-        fprintf(fprt,"%s\t%d\n",wg->prt[i].url, wg->prt[i].numInLink);
+        fprintf(fprt,"%s%s\t%d\n",wg->website, wg->prt[i].url, wg->prt[i].numInLink);
     for(i=0; i<up; i++)
-        fprintf(fprt,"%s\t%lf\n",wg->prt[i].url, wg->prt[i].pagerank);
+        fprintf(fprt,"%s%s\t%lf\n",wg->website, wg->prt[i].url, wg->prt[i].pagerank);
 
     fclose(fprt);
     printf("@@@@@ print top10 pagerank success  @@@@@\n");
 }
 
-char *web_getDir(char *site, char dir[]) {
+char *web_getDir(char *site, char website[], char dir[]) {
     int i, j;
     for(i=0; (*(site+i)!='\0'); i++) {
         if(((*(site+i))=='/')&&(*(site+(++i))=='/')) {
-            for(++i; *(site+i)!='/'; i++);
+            for(++i; *(site+i)!='/'; i++)
+                website[i-7] = *(site+i);
+            website[i-7] = '\0';
             for(j=0; *(site+i)!='\0'; i++,j++)
                 dir[j]=*(site+i);
             dir[j]='\0';
@@ -386,25 +398,27 @@ void web_checkUrlPagerank(webGraph *wg, char *infile, char *outfile) {
         return;
     }
 
-    char curUrl[256], dir[256];
+    char curUrl[256], dir[256], website[256];
     unsigned int hres = 0;
     int flag=0;
     vertexNode *curNode;
     while(fgets(curUrl,256,fin)) {
         flag = 0;
         curUrl[strlen(curUrl)-1]='\0';
-        web_getDir(curUrl,dir);
-        hres = sax_hash(dir) % URLHASH;
-        curNode = wg->vd[hres].vn;
-        while(curNode) {
-            if(curNode->num>0 && strcmp(curNode->url,dir) == 0) {
-                fprintf(fout,"%s\t%d\t%lf\n", curUrl, wg->vr[curNode->num].numInLink, wg->vr[curNode->num].pagerank);
-                flag = 1;
-                break;
+        web_getDir(curUrl, website, dir);
+        if(strcmp(website, wg->website) == 0){
+            hres = sax_hash(dir) % URLHASH;
+            curNode = wg->vd[hres].vn;
+            while(curNode) {
+                if(curNode->num>0 && strcmp(curNode->url,dir) == 0) {
+                    fprintf(fout,"%s\t%d\t%lf\n", curUrl, wg->vr[curNode->num].numInLink, wg->vr[curNode->num].pagerank);
+                    flag = 1;
+                    break;
+                }
+                curNode = curNode->next;
             }
-            curNode = curNode->next;
         }
-        if(!flag)fprintf(fout,"%s\t%s\n",dir,"NOT FOUND");
+        if(!flag)fprintf(fout,"%s\t%s\n",curUrl,"NOT FOUND");
     }
     fclose(fin);
     fclose(fout);

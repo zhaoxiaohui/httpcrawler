@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     for(i=0; i<len; i++)
         socketPort = socketPort*10 + (urlPort[i]-'0');
     /*get the website and dire*/
-    char website[1024], directory[1024];
+    char website[256], directory[256];
     for(i=0; (*(hostname+i)!='\0'); i++) {
         if(((*(hostname+i))=='/')&&(*(hostname+(++i))=='/')) {
             for(++i; *(hostname+i)!='/'; i++)
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,"failed to malloc web\n");
         exit(0);
     }
-    web_init(wg);
+    web_init(wg, website);
 
     qurls = malloc(sizeof(urlq_t));
     if(qurls == NULL) {
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
     //web_generateMap(wg,SITEMAP);
 
     //print pr
-    //web_printAllPagerank(wg,"allpagerank.dat");
+    web_printAllPagerank(wg,"allpagerank.dat");
 
     //print top10 pr
     web_printTop10Pagerank(wg, TOP10);
