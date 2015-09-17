@@ -2,18 +2,18 @@
 ----------
 输入 如： ./siteanalyzer http://xxx.xxx.xxx.xxx/techqq/index.html check.dat [80]
 
-*Args:*
+*Args*
 - 初始入口网址
 - 执行完爬行之后，需要检查的URL，每行一条，最终将检查结果存放在checkresult.dat文件
 - 网站端口，默认为8080
 
-**程序目标**
+**Function**
 ----------
 - 抓取网站链接，计算每个连接的PR(pagerank)，并建立倒排索引
 - 生成PR最高的前十URL
 - 指定查询URL，输出PR值等信息
 
-**程序设计**
+**Design**
 ----------
 本程序的结构分为三块：主运行模块、webgrap模块、urlqueue模块、urlhash模块、network模块、http_client模块、link_parse模块、crawler_http模块。八个模块完成的具体功能如表1下：
 
@@ -35,9 +35,12 @@
 - crawler_http模块
   - 此模块主要通过线程池对urlqueue中的链接进行并行的访问，并存储link_parser的分析结果。实际上就是对其他模块的多线程控制。
 
-**注意**
+**Notice**
 ----------
 运行完之后系统会打印 calculating done字样，并在同文件夹下 生成indcdf.dat top10.dat checkresult.dat文件
 
 
 程序运行时间估计在20分钟左右（网络速度在10M/S左右，并且机器性能相对较好）
+**Contact**
+----------
+> downtownguy.hui@gmail.com
